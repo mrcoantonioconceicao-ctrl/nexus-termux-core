@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["version", "target_file", "mutations"],
+  "properties": {
+    "version": { "type": "string", "enum": ["1.0"] },
+    "target_file": { "type": "string", "pattern": "^[a-zA-Z0-9_/.-]+$" },
+    "mutations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["op", "symbol", "payload"],
+        "properties": {
+          "op": { "type": "string", "enum": ["insert_instruction", "update_state", "patch_guard"] },
+          "symbol": { "type": "string" },
+          "payload": { "type": "string" }
+        }
+      }
+    }
+  }
+}
+
