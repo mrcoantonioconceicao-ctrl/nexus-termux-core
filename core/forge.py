@@ -32,6 +32,7 @@ pub struct {s_name} {{
     accounts_code = "use anchor_lang::prelude::*;\nuse super::state::*;\n\n"
     
     seen_accs = set()
+    init_accounts_map = {} # acc_name -> field_name
     for inst in spec.get("instructions", []):
         acc_name = inst["accounts_struct"]
         if acc_name not in seen_accs:
@@ -47,6 +48,7 @@ pub struct {s_name} {{
                 c_type = ca["type"]
                 c_init = ca.get("init", False)
                 if c_init:
+                    init_accounts_map[acc_name] = c_name
                     payer = ca.get("payer", "signer")
                     space = ca.get("space", 64)
                     seeds = ca.get("seeds", [])
@@ -73,16 +75,21 @@ pub struct {acc_name}<'info> {{
 """
     (base_prog_dir / "context.rs").write_text(accounts_code, encoding="utf-8")
 
-    # 3. Gera lib.rs
+    # 3. Gera lib.rs com injeção automática de bump binding se init presente
     instructions_code = ""
     for inst in spec.get("instructions", []):
         name = inst["name"]
         accounts_struct = inst["accounts_struct"]
-        logic_code = inst.get("logic", "Ok(())")
+        custom_logic = inst.get("logic", "Ok(())")
         
+        bump_inject = ""
+        if accounts_struct in init_accounts_map:
+            acc_field = init_accounts_map[accounts_struct]
+            bump_inject = f"\n    ctx.accounts.{acc_field}.bump = ctx.bumps.{acc_field};"
+
         instructions_code += f"""
     pub fn {name}(ctx: Context<{accounts_struct}>) -> Result<()> {{
-        {logic_code}
+        {custom_logic}{bump_inject}
         Ok(())
     }}
 """
