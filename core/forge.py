@@ -8,43 +8,38 @@ def forge_instruction(spec_path: Path):
         spec = json.load(f)
 
     program_name = spec["program"]
+    program_id = spec.get("program_id", "11111111111111111111111111111111")
     target_rel = f"programs/{program_name}/src/lib.rs"
     target_file = validate_safe_path(target_rel)
     
     target_file.parent.mkdir(parents=True, exist_ok=True)
-    if not target_file.exists():
-        initial_boilerplate = f"""use anchor_lang::prelude::*;
 
-declare_id!{{"{spec.get('program_id', '11111111111111111111111111111111')}"}}
-
-#[program]
-pub mod {program_name} {{
-    use super::*;
-}}
-"""
-        target_file.write_text(initial_boilerplate, encoding="utf-8")
-
-    content = target_file.read_text(encoding="utf-8")
-
+    instructions_code = ""
     for inst in spec.get("instructions", []):
         name = inst["name"]
         accounts_struct = inst["accounts_struct"]
         logic_comment = inst.get("logic", "Ok(())")
         
-        snippet = f"""
+        instructions_code += f"""
     pub fn {name}(ctx: Context<{accounts_struct}>) -> Result<()> {{
         // [nexus-forged-logic]: {logic_comment}
         msg!("Executing {name}");
         Ok(())
     }}
 """
-        if f"fn {name}(" not in content:
-            idx = content.rfind("}")
-            if idx != -1:
-                content = content[:idx] + snippet + "\n}\n"
 
-    target_file.write_text(content, encoding="utf-8")
-    print(f"[+] Forge completed for program '{program_name}' on file: {target_file}")
+    full_source = f"""use anchor_lang::prelude::*;
+
+declare_id!("{program_id}");
+
+#[program]
+pub mod {program_name} {{
+    use super::*;
+{instructions_code}}}
+"""
+
+    target_file.write_text(full_source, encoding="utf-8")
+    print(f"[+] Clean forge render completed for program '{program_name}' on file: {target_file}")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
