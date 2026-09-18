@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "program": "nexus_vault",
+  "program_id": "NexaVault1111111111111111111111111111111111",
+  "instructions": [
+    {
+      "name": "initialize",
+      "accounts_struct": "InitializeVault",
+      "logic": "set vault authority and bump PDA"
+    },
+    {
+      "name": "deposit",
+      "accounts_struct": "DepositVault",
+      "logic": "transfer lamports into PDA vault"
+    }
+  ]
+}
+
