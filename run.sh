@@ -8,7 +8,7 @@ export PYTHONPATH="$CORE_DIR"
 echo "[*] Nexus Termux Core Boot"
 echo "[*] Sandbox: $SANDBOX_DIR"
 
-IR_TEMP="/tmp/nexus_ir_test.json"
+IR_TEMP="./sandbox/nexus_ir_test.json"
 cat <<EOF > "$IR_TEMP"
 {
   "version": "1.0",
