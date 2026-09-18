@@ -12,16 +12,39 @@
       ]
     }
   ],
+  "contexts": {
+    "InitializeVault": {
+      "accounts": [
+        {
+          "name": "vault",
+          "type": "Vault",
+          "init": true,
+          "payer": "signer",
+          "space": 49,
+          "seeds": ["b\"vault\"", "signer.key().as_ref()"]
+        }
+      ]
+    },
+    "DepositVault": {
+      "accounts": [
+        {
+          "name": "vault",
+          "type": "Vault",
+          "init": false
+        }
+      ]
+    }
+  },
   "instructions": [
     {
       "name": "initialize",
       "accounts_struct": "InitializeVault",
-      "logic": "msg!(\"Initializing Vault state\");"
+      "logic": "msg!(\"Initializing Vault PDA with seeds\");"
     },
     {
       "name": "deposit",
       "accounts_struct": "DepositVault",
-      "logic": "msg!(\"Processing deposit lamports\");"
+      "logic": "msg!(\"Processing deposit lamports to PDA\");"
     }
   ]
 }

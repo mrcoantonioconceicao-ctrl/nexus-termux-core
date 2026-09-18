@@ -12,12 +12,12 @@ pub mod nexus_vault {
     use super::*;
 
     pub fn initialize(ctx: Context<InitializeVault>) -> Result<()> {
-        msg!("Initializing Vault state");
+        msg!("Initializing Vault PDA with seeds");
         Ok(())
     }
 
     pub fn deposit(ctx: Context<DepositVault>) -> Result<()> {
-        msg!("Processing deposit lamports");
+        msg!("Processing deposit lamports to PDA");
         Ok(())
     }
 }

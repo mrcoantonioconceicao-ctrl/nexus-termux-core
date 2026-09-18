@@ -27,24 +27,53 @@ pub struct {s_name} {{
 """
     (base_prog_dir / "state.rs").write_text(state_code, encoding="utf-8")
 
-    # 2. Gera context.rs (Accounts structs)
-    seen_accs = set()
+    # 2. Gera context.rs com suporte a PDAs e space dinâmico/estático
+    contexts_def = spec.get("contexts", {})
     accounts_code = "use anchor_lang::prelude::*;\nuse super::state::*;\n\n"
+    
+    seen_accs = set()
     for inst in spec.get("instructions", []):
         acc_name = inst["accounts_struct"]
         if acc_name not in seen_accs:
             seen_accs.add(acc_name)
+            ctx_config = contexts_def.get(acc_name, {})
+            acc_fields_code = """    #[account(mut)]
+    pub signer: Signer<'info>,
+    pub system_program: Program<'info, System>,"""
+            
+            custom_accs = ctx_config.get("accounts", [])
+            for ca in custom_accs:
+                c_name = ca["name"]
+                c_type = ca["type"]
+                c_init = ca.get("init", False)
+                if c_init:
+                    payer = ca.get("payer", "signer")
+                    space = ca.get("space", 64)
+                    seeds = ca.get("seeds", [])
+                    seeds_str = ", ".join(seeds)
+                    acc_fields_code += f"""
+    #[account(
+        init,
+        payer = {payer},
+        space = {space},
+        seeds = [{seeds_str}],
+        bump
+    )]
+    pub {c_name}: Account<'info, {c_type}>,"""
+                else:
+                    acc_fields_code += f"""
+    #[account(mut)]
+    pub {c_name}: Account<'info, {c_type}>,"""
+
             accounts_code += f"""
 #[derive(Accounts)]
 pub struct {acc_name}<'info> {{
-    #[account(mut)]
-    pub signer: Signer<'info>,
-    pub system_program: Program<'info, System>,
+{acc_fields_code}
 }}
 """
     (base_prog_dir / "context.rs").write_text(accounts_code, encoding="utf-8")
 
-    # 3. Gera lib.rs integrando mod state e context
+    # 3. Gera lib.rs
     instructions_code = ""
     for inst in spec.get("instructions", []):
         name = inst["name"]
@@ -74,7 +103,7 @@ pub mod {program_name} {{
 """
 
     (base_prog_dir / "lib.rs").write_text(full_source, encoding="utf-8")
-    print(f"[+] Full nexus module forged for '{program_name}' in {base_prog_dir}")
+    print(f"[+] Full PDA-aware nexus module forged for '{program_name}' in {base_prog_dir}")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
