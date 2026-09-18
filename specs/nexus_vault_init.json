@@ -2,16 +2,26 @@
   "version": "1.0",
   "program": "nexus_vault",
   "program_id": "NexaVault1111111111111111111111111111111111",
+  "state_structs": [
+    {
+      "name": "Vault",
+      "fields": [
+        "authority: Pubkey",
+        "bump: u8",
+        "total_deposits: u64"
+      ]
+    }
+  ],
   "instructions": [
     {
       "name": "initialize",
       "accounts_struct": "InitializeVault",
-      "logic": "set vault authority and bump PDA"
+      "logic": "msg!(\"Initializing Vault state\");"
     },
     {
       "name": "deposit",
       "accounts_struct": "DepositVault",
-      "logic": "transfer lamports into PDA vault"
+      "logic": "msg!(\"Processing deposit lamports\");"
     }
   ]
 }

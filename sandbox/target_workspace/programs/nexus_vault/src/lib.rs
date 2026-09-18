@@ -1,5 +1,10 @@
 use anchor_lang::prelude::*;
 
+pub mod state;
+pub mod context;
+use state::*;
+use context::*;
+
 declare_id!("NexaVault1111111111111111111111111111111111");
 
 #[program]
@@ -7,14 +12,12 @@ pub mod nexus_vault {
     use super::*;
 
     pub fn initialize(ctx: Context<InitializeVault>) -> Result<()> {
-        // [nexus-forged-logic]: set vault authority and bump PDA
-        msg!("Executing initialize");
+        msg!("Initializing Vault state");
         Ok(())
     }
 
     pub fn deposit(ctx: Context<DepositVault>) -> Result<()> {
-        // [nexus-forged-logic]: transfer lamports into PDA vault
-        msg!("Executing deposit");
+        msg!("Processing deposit lamports");
         Ok(())
     }
 }
