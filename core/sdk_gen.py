@@ -10,7 +10,6 @@ def generate_sdk(spec_path: Path):
     program_name = spec["program"]
     program_id = spec.get("program_id", "11111111111111111111111111111111")
     
-    # Corrige path relativo correto dentro da sandbox
     sdk_dir = validate_safe_path(f"sdk/{program_name}")
     sdk_dir.mkdir(parents=True, exist_ok=True)
     
@@ -47,5 +46,5 @@ export class {class_name}Client {{
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         sys.exit("Usage: python3 sdk_gen.py <path-to-spec.json>")
-    generate_sdk(Path(sys.argv))
+    generate_sdk(Path(sys.argv[1]))
 
