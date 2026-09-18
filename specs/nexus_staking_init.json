@@ -1,0 +1,37 @@
+{
+  "version": "1.0",
+  "program": "nexus_staking",
+  "program_id": "NexaStaking111111111111111111111111111111111",
+  "state_structs": [
+    {
+      "name": "StakePool",
+      "fields": [
+        "authority: Pubkey",
+        "bump: u8",
+        "total_staked: u64"
+      ]
+    }
+  ],
+  "contexts": {
+    "InitializePool": {
+      "accounts": [
+        {
+          "name": "pool",
+          "type": "StakePool",
+          "init": true,
+          "payer": "signer",
+          "space": 49,
+          "seeds": ["b\"pool\"", "signer.key().as_ref()"]
+        }
+      ]
+    }
+  },
+  "instructions": [
+    {
+      "name": "initialize_pool",
+      "accounts_struct": "InitializePool",
+      "logic": "msg!(\"Staking pool initialized\");"
+    }
+  ]
+}
+

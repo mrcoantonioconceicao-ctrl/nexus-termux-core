@@ -8,7 +8,7 @@ export PYTHONPATH="$CORE_DIR"
 echo "[*] Nexus Termux Core - Full Pipeline (Forge + Audit + SDK + Tests)"
 echo "[*] Sandbox: $SANDBOX_DIR"
 
-SPEC_FILE="./specs/nexus_vault_init.json"
+SPEC_FILE="./specs/nexus_staking_init.json"
 
 if [ ! -f "$SPEC_FILE" ]; then
     echo "[!] Spec file not found: $SPEC_FILE"
