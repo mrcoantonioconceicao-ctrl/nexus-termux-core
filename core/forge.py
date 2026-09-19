@@ -19,17 +19,36 @@ def forge_module(spec_path: Path):
         state_code += "}\n\n"
     (out_dir / "state.rs").write_text(state_code)
     
-    # 2. Context structs (PDA-aware simplified)
-    ctx_code = "use anchor_lang::prelude::*;\nuse crate::state::*;\n\n"
+    # 2. Context structs (PDA & SPL Token aware)
+    ctx_code = "use anchor_lang::prelude::*;\nuse crate::state::*;\nuse anchor_spl::token::{Token, TokenAccount, Mint};\n\n"
     for ctx_name, ctx_data in spec.get("contexts", {}).items():
         ctx_code += f"#[derive(Accounts)]\npub struct {ctx_name}<'info> {{\n"
         for acc in ctx_data.get("accounts", []):
+            acc_name = acc["name"]
+            acc_type = acc["type"]
             if acc.get("init"):
-                ctx_code += f"    #[account(init, payer = signer, space = 8 + {acc.get('space', 64)}, seeds = [b\"pool\", signer.key().as_ref()], bump)]\n"
+                ctx_code += f"    #[account(init, payer = signer, space = 8 + {acc.get('space', 64)}, seeds = [b\"{acc_name}\", signer.key().as_ref()], bump)]\n"
+                ctx_code += f"    pub {acc_name}: Account<'info, {acc_type}>,\n"
+            elif acc.get("token_account"):
+                ctx_code += f"    #[account(mut)]\n"
+                ctx_code += f"    pub {acc_name}: Account<'info, TokenAccount>,\n"
+            elif acc.get("mint"):
+                ctx_code += f"    pub {acc_name}: Account<'info, Mint>,\n"
             else:
                 ctx_code += f"    #[account(mut)]\n"
-            ctx_code += f"    pub {acc['name']}: Account<'info, {acc['type']}>,\n"
-        ctx_code += "    #[account(mut)]\n    pub signer: Signer<'info>,\n    pub system_program: Program<'info, System>,\n}\n\n"
+                ctx_code += f"    pub {acc_name}: Account<'info, {acc_type}>,\n"
+        
+        if any(acc.get("token_account") for acc in ctx_data.get("accounts", [])):
+            ctx_code += "    pub token_program: Program<'info, Token>,\n"
+        
+        ctx_code += "    #[account(mut)]\n    pub signer: Signer<'info>\n"
+        if any(acc.get("init") for acc in ctx_data.get("accounts", [])) or not any(acc.get("token_account") for acc in ctx_data.get("accounts", [])):
+            ctx_code += "    , pub system_program: Program<'info, System>\n"
+        else:
+            ctx_code += ";\n"
+        
+        ctx_code = ctx_code.replace(",\n    , pub system_program", ",\n    pub system_program")
+        ctx_code += "}\n\n"
     (out_dir / "context.rs").write_text(ctx_code)
     
     # 3. Lib.rs with args support
@@ -46,7 +65,7 @@ def forge_module(spec_path: Path):
     
     lib_code += "}\n"
     (out_dir / "lib.rs").write_text(lib_code)
-    print(f"[+] Forged multi-file module with args support for '{prog_name}' in {out_dir}")
+    print(f"[+] Forged multi-file module with SPL/Token support for '{prog_name}' in {out_dir}")
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
