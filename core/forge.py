@@ -42,7 +42,7 @@ def forge_module(spec_path: Path):
         sig_args = f", {args_str}" if args_str else ""
         lib_code += f"    pub fn {name}(ctx: Context<{acc_struct}>{sig_args}) -> Result<()> {{\n"
         lib_code += f"        {ix['logic']}\n"
-        lib_code += f"        Ok(())\n    }\n"
+        lib_code += "        Ok(())\n    }\n"
     
     lib_code += "}\n"
     (out_dir / "lib.rs").write_text(lib_code)
@@ -51,4 +51,3 @@ def forge_module(spec_path: Path):
 if __name__ == "__main__":
     if len(sys.argv) > 1:
         forge_module(Path(sys.argv[1]))
-
