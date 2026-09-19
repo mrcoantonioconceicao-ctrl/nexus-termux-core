@@ -1,14 +1,14 @@
 {
   "version": "1.0",
   "program": "nexus_vault",
-  "program_id": "NexaVault1111111111111111111111111111111111",
+  "program_id": "NexaVault111111111111111111111111111111111",
   "state_structs": [
     {
       "name": "Vault",
       "fields": [
         "authority: Pubkey",
         "bump: u8",
-        "total_deposits: u64"
+        "balance: u64"
       ]
     }
   ],
@@ -25,27 +25,48 @@
         }
       ]
     },
-    "DepositVault": {
+    "Deposit": {
       "accounts": [
         {
           "name": "vault",
           "type": "Vault",
-          "init": false
+          "init": false,
+          "payer": null,
+          "space": null,
+          "seeds": []
+        }
+      ]
+    },
+    "Withdraw": {
+      "accounts": [
+        {
+          "name": "vault",
+          "type": "Vault",
+          "init": false,
+          "payer": null,
+          "space": null,
+          "seeds": []
         }
       ]
     }
   },
   "instructions": [
     {
-      "name": "initialize",
+      "name": "initialize_vault",
       "accounts_struct": "InitializeVault",
-      "logic": "msg!(\"Initializing Vault PDA with seeds\");"
+      "logic": "let vault = &mut ctx.accounts.vault;\nvault.authority = ctx.accounts.signer.key();\nvault.bump = ctx.bumps.vault;\nvault.balance = 0;\nmsg!(\"Vault initialized\");"
     },
     {
       "name": "deposit",
-      "accounts_struct": "DepositVault",
-      "logic": "msg!(\"Processing deposit lamports to PDA\");"
+      "accounts_struct": "Deposit",
+      "args": ["amount: u64"],
+      "logic": "let vault = &mut ctx.accounts.vault;\nvault.balance = vault.balance.checked_add(amount).ok_or(anchor_lang::error::ErrorCode::AccountDidNotSerialize)?;\nmsg!(\"Vault deposited: {}\", amount);"
+    },
+    {
+      "name": "withdraw",
+      "accounts_struct": "Withdraw",
+      "args": ["amount: u64"],
+      "logic": "let vault = &mut ctx.accounts.vault;\nvault.balance = vault.balance.checked_sub(amount).ok_or(anchor_lang::error::ErrorCode::AccountDidNotSerialize)?;\nmsg!(\"Vault withdrawn: {}\", amount);"
     }
   ]
 }
-

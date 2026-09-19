@@ -1,0 +1,19 @@
+[toolchain]
+anchor_version = "0.29.0"
+
+[features]
+resolution = "2"
+skip-lint = false
+
+[workspace]
+members = [
+    "programs/nexus_vault",
+    "programs/nexus_staking",
+]
+
+[registry]
+url = "https://api.apr.dev"
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
