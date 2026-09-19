@@ -19,7 +19,7 @@ def forge_module(spec_path: Path):
         state_code += "}\n\n"
     (out_dir / "state.rs").write_text(state_code)
     
-    # 2. Context structs (PDA & SPL Token aware with safe fallbacks)
+    # 2. Context structs
     ctx_code = "use anchor_lang::prelude::*;\nuse crate::state::*;\nuse anchor_spl::token::{Token, TokenAccount, Mint};\n\n"
     for ctx_name, ctx_data in spec.get("contexts", {}).items():
         ctx_code += f"#[derive(Accounts)]\npub struct {ctx_name}<'info> {{\n"
@@ -54,8 +54,11 @@ def forge_module(spec_path: Path):
         ctx_code += "}\n\n"
     (out_dir / "context.rs").write_text(ctx_code)
     
-    # 3. Lib.rs with args support
-    lib_code = f"use anchor_lang::prelude::*;\nmod state;\nmod context;\nuse state::*;\nuse context::*;\n\ndeclare_id!(\"{spec['program_id']}\");\n\n#[program]\npub mod {prog_name} {{\n    use super::*;\n\n"
+    # 3. Lib.rs with dynamic optional cpi mod
+    has_cpi = (out_dir / "cpi.rs").exists() or bool(spec.get("cpi"))
+    cpi_mod = "mod cpi;\n" if has_cpi else ""
+    
+    lib_code = f"use anchor_lang::prelude::*;\nmod state;\nmod context;\n{cpi_mod}use state::*;\nuse context::*;\n\ndeclare_id!(\"{spec['program_id']}\");\n\n#[program]\npub mod {prog_name} {{\n    use super::*;\n\n"
     
     for ix in spec.get("instructions", []):
         name = ix["name"]
@@ -68,7 +71,7 @@ def forge_module(spec_path: Path):
     
     lib_code += "}\n"
     (out_dir / "lib.rs").write_text(lib_code)
-    print(f"[+] Forged multi-file module with SPL/Token support for '{prog_name}' in {out_dir}")
+    print(f"[+] Forged multi-file module with cpi/SPL support for '{prog_name}' in {out_dir}")
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
