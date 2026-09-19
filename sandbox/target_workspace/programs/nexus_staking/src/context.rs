@@ -13,7 +13,7 @@ pub struct InitializePool<'info> {
 
 #[derive(Accounts)]
 pub struct Stake<'info> {
-    #[account(mut)]
+    #[account(mut, seeds = [b"pool", signer.key().as_ref()], bump)]
     pub pool: Account<'info, StakePool>,
     #[account(mut)]
     pub signer: Signer<'info>
