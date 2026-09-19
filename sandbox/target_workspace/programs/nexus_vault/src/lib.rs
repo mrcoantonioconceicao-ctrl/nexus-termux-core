@@ -21,6 +21,18 @@ msg!("Vault initialized");
     }
     pub fn deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
         let vault = &mut ctx.accounts.vault;
+// A função de depósito deve incluir uma transferência de SOL (ou SPL tokens) do depositante para a conta do cofre.
+// Assumes que 'system_program: Program<'info, System>' e 'signer: Signer' (o depositante) são adicionados ao contexto 'Deposit'.
+anchor_lang::system_program::transfer(
+    CpiContext::new(
+        ctx.accounts.system_program.to_account_info(),
+        anchor_lang::system_program::Transfer {
+            from: ctx.accounts.signer.to_account_info(),
+            to: ctx.accounts.vault.to_account_info(),
+        },
+    ),
+    amount,
+)?;
 vault.balance = vault.balance.checked_add(amount).ok_or(anchor_lang::error::ErrorCode::AccountDidNotSerialize)?;
 msg!("Vault deposited: {}", amount);
         Ok(())
