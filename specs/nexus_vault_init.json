@@ -12,6 +12,12 @@
       ]
     }
   ],
+  "cpi": [
+    {
+      "program": "nexus_token_vault",
+      "instruction": "deposit_token"
+    }
+  ],
   "contexts": {
     "InitializeVault": {
       "accounts": [
@@ -30,10 +36,7 @@
         {
           "name": "vault",
           "type": "Vault",
-          "init": false,
-          "payer": null,
-          "space": null,
-          "seeds": []
+          "init": false
         }
       ]
     },
@@ -42,10 +45,7 @@
         {
           "name": "vault",
           "type": "Vault",
-          "init": false,
-          "payer": null,
-          "space": null,
-          "seeds": []
+          "init": false
         }
       ]
     }
