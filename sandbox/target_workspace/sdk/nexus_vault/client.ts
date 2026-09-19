@@ -1,24 +1,24 @@
-import { Program } from '@coral-xyz/anchor';
+// Strict Typed SDK for nexus_vault
+import { Program, BN } from '@project-serum/anchor';
 import { PublicKey } from '@solana/web3.js';
 
-export const PROGRAM_ID = new PublicKey('NexaVault1111111111111111111111111111111111');
+
+export interface Vault {
+  authority: PublicKey;
+  bump: number;
+  total_deposits: number | BN;
+}
+
 
 export class NexusVaultClient {
-    program: Program<any>;
+  constructor(readonly program: Program) {}
 
-    constructor(program: Program<any>) {
-        this.program = program;
-    }
+  async initialize() {
+    return await this.program.methods.initialize().rpc();
+  }
 
-    async initialize(params: any): Promise<string> {
-        return await this.program.methods
-            .initialize(params)
-            .rpc();
-    }
+  async deposit() {
+    return await this.program.methods.deposit().rpc();
+  }
 
-    async deposit(params: any): Promise<string> {
-        return await this.program.methods
-            .deposit(params)
-            .rpc();
-    }
 }

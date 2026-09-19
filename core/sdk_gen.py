@@ -46,8 +46,9 @@ def generate_strict_sdk(spec_path: Path):
             param_sig = ""
             pass_args = ""
             
+        args_payload = pass_args.lstrip(", ")
         methods_code += f"  async {method_name}({param_sig}) {{\n"
-        methods_code += f"    return await this.program.methods.{method_name}({pass_args.lstrip(', ')}).rpc();\n  }\n\n"
+        methods_code += f"    return await this.program.methods.{method_name}({args_payload}).rpc();\n  }}\n\n"
 
     state_types = ""
     for st in spec.get("state_structs", []):
@@ -61,13 +62,14 @@ def generate_strict_sdk(spec_path: Path):
                 state_types += f"  {f_name}: {ts_type};\n"
         state_types += "}\n\n"
 
+    class_name = "".join(word.capitalize() for word in prog_name.split("_")) + "Client"
     sdk_content = f"""// Strict Typed SDK for {prog_name}
 import {{ Program, BN }} from '@project-serum/anchor';
 import {{ PublicKey }} from '@solana/web3.js';
 
 {ts_interfaces}
 {state_types}
-export class {prog_name.title().replace('_', '')}Client {{
+export class {class_name} {{
   constructor(readonly program: Program) {{}}
 
 {methods_code}}}

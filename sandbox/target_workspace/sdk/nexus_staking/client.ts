@@ -1,24 +1,28 @@
-import { Program } from '@coral-xyz/anchor';
+// Strict Typed SDK for nexus_staking
+import { Program, BN } from '@project-serum/anchor';
 import { PublicKey } from '@solana/web3.js';
 
-export const PROGRAM_ID = new PublicKey('NexaStaking111111111111111111111111111111111');
+export interface StakeParams {
+  amount: number | BN;
+}
+
+
+export interface StakePool {
+  authority: PublicKey;
+  bump: number;
+  total_staked: number | BN;
+}
+
 
 export class NexusStakingClient {
-    program: Program<any>;
+  constructor(readonly program: Program) {}
 
-    constructor(program: Program<any>) {
-        this.program = program;
-    }
+  async initialize_pool() {
+    return await this.program.methods.initialize_pool().rpc();
+  }
 
-    async initialize_pool(params: any): Promise<string> {
-        return await this.program.methods
-            .initialize_pool(params)
-            .rpc();
-    }
+  async stake(params: StakeParams) {
+    return await this.program.methods.stake({ ...params }).rpc();
+  }
 
-    async stake(params: any): Promise<string> {
-        return await this.program.methods
-            .stake(params)
-            .rpc();
-    }
 }
