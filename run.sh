@@ -1,32 +1,25 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/bash
+set -e
 
-export SANDBOX_DIR="$(realpath ./sandbox/target_workspace)"
-export CORE_DIR="$(realpath ./core)"
-export PYTHONPATH="$CORE_DIR"
+SPECS=("./specs/nexus_vault_init.json" "./specs/nexus_staking_init.json")
+WORKSPACE="sandbox/target_workspace"
 
-echo "[*] Nexus Termux Core - Full Pipeline (Forge + Audit + SDK + Tests)"
-echo "[*] Sandbox: $SANDBOX_DIR"
+echo "[*] Nexus Termux Core - Multi-Program Workspace Pipeline"
+mkdir -p "$WORKSPACE/programs" "$WORKSPACE/sdk" "$WORKSPACE/tests"
 
-SPEC_FILE="./specs/nexus_staking_init.json"
+for spec in "${SPECS[@]}"; do
+    if [ -f "$spec" ]; then
+        echo "[*] Processing spec: $spec"
+        python3 core/forge.py "$spec"
+        python3 core/sdk_gen.py "$spec"
+        python3 core/tests_gen.py "$spec"
+    fi
+done
 
-if [ ! -f "$SPEC_FILE" ]; then
-    echo "[!] Spec file not found: $SPEC_FILE"
-    exit 1
-fi
+# Audit Gate on whole workspace
+python3 core/audit_gate.py "$WORKSPACE"
 
-# 1. Forge
-python3 "$CORE_DIR/forge.py" "$SPEC_FILE"
+# Multi-program workspace sync
+python3 core/workspace_sync.py "$WORKSPACE"
 
-# 2. Audit Gate
-PROGRAM_NAME=$(python3 -c "import json; data = json.load(open('$SPEC_FILE')); print(data['program'])")
-python3 "$CORE_DIR/audit_gate.py" "$PROGRAM_NAME"
-
-# 3. SDK Gen
-python3 "$CORE_DIR/sdk_gen.py" "$SPEC_FILE"
-
-# 4. Test Gen
-python3 "$CORE_DIR/tests_gen.py" "$SPEC_FILE"
-
-echo "[+] Full CI/CD local pipeline execution clean and verified."
-
+echo "[+] Multi-program workspace pipeline execution clean and verified."

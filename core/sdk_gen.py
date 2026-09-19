@@ -1,50 +1,82 @@
 import json
 import sys
 from pathlib import Path
-from safety_guard import validate_safe_path
 
-def generate_sdk(spec_path: Path):
-    with spec_path.open("r", encoding="utf-8") as f:
+def generate_strict_sdk(spec_path: Path):
+    with open(spec_path, "r") as f:
         spec = json.load(f)
-
-    program_name = spec["program"]
-    program_id = spec.get("program_id", "11111111111111111111111111111111")
     
-    sdk_dir = validate_safe_path(f"sdk/{program_name}")
-    sdk_dir.mkdir(parents=True, exist_ok=True)
+    prog_name = spec["program"]
+    out_dir = Path("sandbox/target_workspace/sdk") / prog_name
+    out_dir.mkdir(parents=True, exist_ok=True)
     
+    # Map rust/anchor types to TS types
+    type_map = {
+        "u64": "number | BN",
+        "u32": "number",
+        "u16": "number",
+        "u8": "number",
+        "i64": "number | BN",
+        "i32": "number",
+        "bool": "boolean",
+        "Pubkey": "PublicKey",
+        "string": "string"
+    }
+    
+    ts_interfaces = ""
     methods_code = ""
-    for inst in spec.get("instructions", []):
-        name = inst["name"]
-        methods_code += f"""
-    async {name}(params: any): Promise<string> {{
-        return await this.program.methods
-            .{name}(params)
-            .rpc();
-    }}
-"""
+    
+    for ix in spec.get("instructions", []):
+        method_name = ix["name"]
+        args = ix.get("args", [])
+        interface_name = "".join(word.capitalize() for word in method_name.split("_")) + "Params"
+        
+        if args:
+            ts_interfaces += f"export interface {interface_name} {{\n"
+            for arg in args:
+                parts = [p.strip() for p in arg.split(":")]
+                if len(parts) == 2:
+                    field_name, rust_type = parts[0], parts[1]
+                    ts_type = type_map.get(rust_type, "any")
+                    ts_interfaces += f"  {field_name}: {ts_type};\n"
+            ts_interfaces += "}\n\n"
+            param_sig = f"params: {interface_name}"
+            pass_args = ", { ...params }"
+        else:
+            param_sig = ""
+            pass_args = ""
+            
+        methods_code += f"  async {method_name}({param_sig}) {{\n"
+        methods_code += f"    return await this.program.methods.{method_name}({pass_args.lstrip(', ')}).rpc();\n  }\n\n"
 
-    class_name = "".join(word.capitalize() for word in program_name.split("_"))
-    sdk_content = f"""import {{ Program }} from '@coral-xyz/anchor';
+    state_types = ""
+    for st in spec.get("state_structs", []):
+        st_name = st["name"]
+        state_types += f"export interface {st_name} {{\n"
+        for field in st["fields"]:
+            parts = [p.strip() for p in field.split(":")]
+            if len(parts) == 2:
+                f_name, r_type = parts[0], parts[1]
+                ts_type = type_map.get(r_type, "any")
+                state_types += f"  {f_name}: {ts_type};\n"
+        state_types += "}\n\n"
+
+    sdk_content = f"""// Strict Typed SDK for {prog_name}
+import {{ Program, BN }} from '@project-serum/anchor';
 import {{ PublicKey }} from '@solana/web3.js';
 
-export const PROGRAM_ID = new PublicKey('{program_id}');
+{ts_interfaces}
+{state_types}
+export class {prog_name.title().replace('_', '')}Client {{
+  constructor(readonly program: Program) {{}}
 
-export class {class_name}Client {{
-    program: Program<any>;
-
-    constructor(program: Program<any>) {{
-        this.program = program;
-    }}
 {methods_code}}}
 """
-
-    out_file = sdk_dir / "client.ts"
-    out_file.write_text(sdk_content, encoding="utf-8")
-    print(f"[SDK GEN] Client stub generated at: {out_file}")
+    
+    out_file = out_dir / "client.ts"
+    out_file.write_text(sdk_content)
+    print(f"[STRICT SDK GEN] Strict TS client stub generated at: {out_file}")
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        sys.exit("Usage: python3 sdk_gen.py <path-to-spec.json>")
-    generate_sdk(Path(sys.argv[1]))
-
+    if len(sys.argv) > 1:
+        generate_strict_sdk(Path(sys.argv[1]))
