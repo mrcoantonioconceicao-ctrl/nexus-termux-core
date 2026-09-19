@@ -1,7 +1,6 @@
 use anchor_lang::prelude::*;
-
-pub mod state;
-pub mod context;
+mod state;
+mod context;
 use state::*;
 use context::*;
 
@@ -15,7 +14,6 @@ pub mod nexus_vault {
         msg!("Initializing Vault PDA with seeds");
         Ok(())
     }
-
     pub fn deposit(ctx: Context<DepositVault>) -> Result<()> {
         msg!("Processing deposit lamports to PDA");
         Ok(())
