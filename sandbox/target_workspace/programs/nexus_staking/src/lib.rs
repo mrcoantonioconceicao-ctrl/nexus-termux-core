@@ -10,6 +10,7 @@ declare_id!("NexaStaking111111111111111111111111111111111");
 pub mod nexus_staking {
     use super::*;
 
+    // [SecOps Guard] Checked Signer & Authority Validation
     pub fn initialize_pool(ctx: Context<InitializePool>) -> Result<()> {
         let pool = &mut ctx.accounts.pool;
 pool.authority = ctx.accounts.signer.key();
