@@ -42,11 +42,12 @@
     {
       "name": "initialize_pool",
       "accounts_struct": "InitializePool",
-      "logic": "msg!(\"Staking pool initialized\");"
+      "logic": "let pool = &mut ctx.accounts.pool;\npool.authority = ctx.accounts.signer.key();\npool.bump = ctx.bumps.pool;\npool.total_staked = 0;\nmsg!(\"Staking pool initialized\");"
     },
     {
       "name": "stake",
       "accounts_struct": "Stake",
+      "args": ["amount: u64"],
       "logic": "let pool = &mut ctx.accounts.pool;\npool.total_staked = pool.total_staked.checked_add(amount).ok_or(anchor_lang::error::ErrorCode::AccountDidNotSerialize)?;\nmsg!(\"Staked amount: {}\", amount);"
     }
   ]
