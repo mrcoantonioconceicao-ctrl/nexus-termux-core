@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-SPECS=("./specs/nexus_vault_init.json" "./specs/nexus_staking_init.json")
+SPECS=("./specs/nexus_vault_init.json" "./specs/nexus_staking_init.json" "./specs/nexus_token_vault_init.json")
 WORKSPACE="sandbox/target_workspace"
 
 echo "[*] Nexus Termux Core - Multi-Program Workspace Pipeline"

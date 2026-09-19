@@ -1,0 +1,63 @@
+{
+  "version": "1.0",
+  "program": "nexus_token_vault",
+  "program_id": "NexaTokenV11111111111111111111111111111111",
+  "state_structs": [
+    {
+      "name": "TokenVaultState",
+      "fields": [
+        "authority: Pubkey",
+        "bump: u8",
+        "mint: Pubkey"
+      ]
+    }
+  ],
+  "contexts": {
+    "InitializeTokenVault": {
+      "accounts": [
+        {
+          "name": "vault",
+          "type": "TokenVaultState",
+          "init": true,
+          "payer": "signer",
+          "space": 65,
+          "seeds": ["b\"token_vault\"", "signer.key().as_ref()"]
+        },
+        {
+          "name": "mint",
+          "mint": true
+        }
+      ]
+    },
+    "DepositToken": {
+      "accounts": [
+        {
+          "name": "vault",
+          "type": "TokenVaultState",
+          "init": false
+        },
+        {
+          "name": "vault_token_account",
+          "token_account": true
+        },
+        {
+          "name": "user_token_account",
+          "token_account": true
+        }
+      ]
+    }
+  },
+  "instructions": [
+    {
+      "name": "initialize_token_vault",
+      "accounts_struct": "InitializeTokenVault",
+      "logic": "let vault = &mut ctx.accounts.vault;\nvault.authority = ctx.accounts.signer.key();\nvault.bump = ctx.bumps.vault;\nvault.mint = ctx.accounts.mint.key();\nmsg!(\"Token vault initialized\");"
+    },
+    {
+      "name": "deposit_token",
+      "accounts_struct": "DepositToken",
+      "args": ["amount: u64"],
+      "logic": "msg!(\"Depositing token amount: {}\", amount);"
+    }
+  ]
+}
