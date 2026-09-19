@@ -3,7 +3,7 @@ import { Program, BN } from '@project-serum/anchor';
 import { PublicKey } from '@solana/web3.js';
 
 export interface StakeParams {
-  amount: number | BN;
+  amount: BN;
 }
 
 
