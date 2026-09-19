@@ -19,14 +19,14 @@ def forge_module(spec_path: Path):
         state_code += "}\n\n"
     (out_dir / "state.rs").write_text(state_code)
     
-    # 2. Context structs (PDA & SPL Token aware)
+    # 2. Context structs (PDA & SPL Token aware with safe fallbacks)
     ctx_code = "use anchor_lang::prelude::*;\nuse crate::state::*;\nuse anchor_spl::token::{Token, TokenAccount, Mint};\n\n"
     for ctx_name, ctx_data in spec.get("contexts", {}).items():
         ctx_code += f"#[derive(Accounts)]\npub struct {ctx_name}<'info> {{\n"
         for acc in ctx_data.get("accounts", []):
             acc_name = acc["name"]
-            acc_type = acc["type"]
             if acc.get("init"):
+                acc_type = acc.get("type", "AccountInfo")
                 ctx_code += f"    #[account(init, payer = signer, space = 8 + {acc.get('space', 64)}, seeds = [b\"{acc_name}\", signer.key().as_ref()], bump)]\n"
                 ctx_code += f"    pub {acc_name}: Account<'info, {acc_type}>,\n"
             elif acc.get("token_account"):
@@ -35,6 +35,7 @@ def forge_module(spec_path: Path):
             elif acc.get("mint"):
                 ctx_code += f"    pub {acc_name}: Account<'info, Mint>,\n"
             else:
+                acc_type = acc.get("type", "AccountInfo")
                 ctx_code += f"    #[account(mut)]\n"
                 ctx_code += f"    pub {acc_name}: Account<'info, {acc_type}>,\n"
         
@@ -42,7 +43,9 @@ def forge_module(spec_path: Path):
             ctx_code += "    pub token_program: Program<'info, Token>,\n"
         
         ctx_code += "    #[account(mut)]\n    pub signer: Signer<'info>\n"
-        if any(acc.get("init") for acc in ctx_data.get("accounts", [])) or not any(acc.get("token_account") for acc in ctx_data.get("accounts", [])):
+        has_init = any(acc.get("init") for acc in ctx_data.get("accounts", []))
+        has_token = any(acc.get("token_account") for acc in ctx_data.get("accounts", []))
+        if has_init or not has_token:
             ctx_code += "    , pub system_program: Program<'info, System>\n"
         else:
             ctx_code += ";\n"

@@ -9,6 +9,7 @@ skip-lint = false
 members = [
     "programs/nexus_vault",
     "programs/nexus_staking",
+    "programs/nexus_token_vault",
 ]
 
 [registry]
